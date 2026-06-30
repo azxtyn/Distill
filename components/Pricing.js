@@ -1,8 +1,45 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser, SignUpButton } from '@clerk/nextjs'
 
 export default function Pricing() {
   const [annual, setAnnual] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [isPro, setIsPro] = useState(false)
+  const [checkingStatus, setCheckingStatus] = useState(true)
+  const { isSignedIn } = useUser()
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/subscription-status')
+        .then(res => res.json())
+        .then(data => setIsPro(data.isPro))
+        .catch(() => setIsPro(false))
+        .finally(() => setCheckingStatus(false))
+    } else {
+      setCheckingStatus(false)
+    }
+  }, [isSignedIn])
+
+  const handleCheckout = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: annual ? 'yearly' : 'monthly' })
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        alert(data.error || 'Something went wrong starting checkout.')
+      }
+    } catch (e) {
+      alert('Something went wrong. Please try again.')
+    }
+    setLoading(false)
+  }
 
   return (
     <section id="pricing" className="px-6 py-20 bg-gray-50">
@@ -38,9 +75,17 @@ export default function Pricing() {
             <li className="flex items-center gap-2 text-gray-400"><span className="text-gray-300">✗</span> Priority processing</li>
             <li className="flex items-center gap-2 text-gray-400"><span className="text-gray-300">✗</span> History & saved summaries</li>
           </ul>
-          <button className="w-full border border-gray-200 text-gray-900 py-2.5 rounded-lg text-sm hover:bg-gray-50">
-            Get started free
-          </button>
+          {!isSignedIn ? (
+            <SignUpButton mode="modal">
+              <button className="w-full border border-gray-200 text-gray-900 py-2.5 rounded-lg text-sm hover:bg-gray-50">
+                Get started free
+              </button>
+            </SignUpButton>
+          ) : (
+            <button disabled className="w-full border border-gray-200 text-gray-400 py-2.5 rounded-lg text-sm">
+              {isPro ? 'Free plan' : 'Current plan'}
+            </button>
+          )}
         </div>
 
         <div className="bg-white border-2 border-emerald-500 rounded-xl p-6 relative">
@@ -61,9 +106,22 @@ export default function Pricing() {
             <li className="flex items-center gap-2 text-gray-700"><span className="text-emerald-500">✓</span> Priority processing</li>
             <li className="flex items-center gap-2 text-gray-700"><span className="text-emerald-500">✓</span> History & saved summaries</li>
           </ul>
-          <button className="w-full bg-emerald-500 text-white py-2.5 rounded-lg text-sm hover:bg-emerald-600 font-medium">
-            Get Pro →
-          </button>
+          {!isSignedIn ? (
+            <SignUpButton mode="modal">
+              <button className="w-full bg-emerald-500 text-white py-2.5 rounded-lg text-sm hover:bg-emerald-600 font-medium">
+                Get Pro →
+              </button>
+            </SignUpButton>
+          ) : isPro ? (
+            <button disabled className="w-full bg-emerald-100 text-emerald-700 py-2.5 rounded-lg text-sm font-medium">
+              ✓ Current plan
+            </button>
+          ) : (
+            <button onClick={handleCheckout} disabled={loading || checkingStatus}
+              className="w-full bg-emerald-500 text-white py-2.5 rounded-lg text-sm hover:bg-emerald-600 font-medium disabled:opacity-50">
+              {loading ? 'Loading...' : 'Get Pro →'}
+            </button>
+          )}
         </div>
       </div>
 

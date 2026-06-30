@@ -1,9 +1,48 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { auth } from '@clerk/nextjs/server'
+import { supabase } from '@/lib/supabase'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const FREE_DAILY_LIMIT = 5
 
 export async function POST(req) {
   try {
+    const { userId } = await auth()
+    if (!userId) {
+      return Response.json({ error: 'Please sign in to use Distill.' }, { status: 401 })
+    }
+
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', userId)
+      .single()
+
+    const isPro = subscription?.status === 'active'
+
+    const today = new Date().toISOString().split('T')[0]
+
+    const { data: existing, error: fetchError } = await supabase
+      .from('usage')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('used_date', today)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.log('SUPABASE FETCH ERROR:', fetchError)
+    }
+    console.log('Existing usage row:', existing, 'isPro:', isPro)
+
+    const currentCount = existing?.count || 0
+
+    if (!isPro && currentCount >= FREE_DAILY_LIMIT) {
+      return Response.json(
+        { error: `You've used all ${FREE_DAILY_LIMIT} free Distills today. Upgrade to Pro for unlimited access.` },
+        { status: 429 }
+      )
+    }
+
     const { content, includeQuiz } = await req.json()
 
     const quizNote = includeQuiz
@@ -31,8 +70,28 @@ export async function POST(req) {
     const raw = response.content.map(b => b.text || '').join('').replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(raw)
 
-    return Response.json(parsed)
+    let updateError = null
+    if (existing) {
+      const { error } = await supabase
+        .from('usage')
+        .update({ count: currentCount + 1 })
+        .eq('user_id', userId)
+        .eq('used_date', today)
+      updateError = error
+    } else {
+      const { error } = await supabase
+        .from('usage')
+        .insert({ user_id: userId, used_date: today, count: 1 })
+      updateError = error
+    }
+
+    if (updateError) {
+      console.log('SUPABASE UPDATE/INSERT ERROR:', updateError)
+    }
+
+    return Response.json({ ...parsed, remaining: isPro ? null : FREE_DAILY_LIMIT - (currentCount + 1) })
   } catch (e) {
+    console.log('ROUTE CATCH ERROR:', e)
     return Response.json({ error: e.message }, { status: 500 })
   }
 }

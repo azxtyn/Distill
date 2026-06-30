@@ -13,6 +13,7 @@ export default function App() {
   const [error, setError] = useState('')
   const [results, setResults] = useState(null)
   const [activeResult, setActiveResult] = useState('summary')
+  const [remaining, setRemaining] = useState(null)
 
   const handleFile = (file) => {
     if (!file) return
@@ -31,6 +32,17 @@ export default function App() {
     if (tab === 'pdf') return { type: 'pdf', value: pdfBase64 }
   }
 
+  const handleClear = () => {
+    setText('')
+    setUrl('')
+    setYtUrl('')
+    setPdfBase64(null)
+    setPdfName('')
+    setIncludeQuiz(false)
+    setError('')
+    setResults(null)
+  }
+
   const handleSubmit = async () => {
     const content = getContent()
     if (!content?.value) { setError('Please enter some content first.'); return }
@@ -47,6 +59,7 @@ export default function App() {
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setResults(data)
       setActiveResult('summary')
+      if (typeof data.remaining === 'number') setRemaining(data.remaining)
     } catch (e) {
       setError(e.message)
     }
@@ -67,20 +80,32 @@ export default function App() {
     ...(results?.quiz ? [{ id: 'quiz', label: 'Quiz' }] : []),
   ]
 
+  const hasContent = text || url || ytUrl || pdfBase64
+
   return (
     <section id="app" className="px-6 py-20">
       <div className="text-center mb-10">
         <p className="text-xs font-medium tracking-widest text-emerald-600 uppercase mb-2">Try it now</p>
         <h2 className="text-3xl font-medium text-gray-900">Paste anything. Learn everything.</h2>
+        {remaining !== null && (
+          <p className="text-sm text-gray-400 mt-2">{remaining} free Distill{remaining === 1 ? '' : 's'} left today</p>
+        )}
       </div>
       <div className="max-w-2xl mx-auto bg-white border border-gray-100 rounded-xl p-6">
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-2 rounded-lg text-sm border ${tab === t.id ? 'bg-gray-100 border-gray-300 text-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
-              {t.label}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2 flex-wrap">
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)}
+                className={`px-4 py-2 rounded-lg text-sm border ${tab === t.id ? 'bg-gray-100 border-gray-300 text-gray-900' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {(hasContent || results) && (
+            <button onClick={handleClear} className="text-sm text-gray-400 hover:text-gray-700 flex items-center gap-1">
+              ✕ Clear
             </button>
-          ))}
+          )}
         </div>
 
         {tab === 'text' && <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Paste your article, notes, or any text here…" className="w-full border border-gray-200 rounded-lg p-3 text-sm min-h-32 resize-y focus:outline-none focus:border-gray-400" />}
