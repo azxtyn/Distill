@@ -7,12 +7,12 @@ export default function Footer() {
           <span className="font-medium text-gray-900">Distill</span>
         </div>
         <div className="flex gap-6">
-          <a href="#" className="text-sm text-gray-400 hover:text-gray-600">Privacy</a>
-          <a href="#" className="text-sm text-gray-400 hover:text-gray-600">Terms</a>
-          <a href="#" className="text-sm text-gray-400 hover:text-gray-600">Contact</a>
+          <a href="/privacy" className="text-sm text-gray-400 hover:text-gray-600">Privacy</a>
+          <a href="/terms" className="text-sm text-gray-400 hover:text-gray-600">Terms</a>
+          <a href="mailto:a.b.digitalappsdev@gmail.com" className="text-sm text-gray-400 hover:text-gray-600">Contact</a>
         </div>
       </div>
-      <p className="text-xs text-gray-300 mt-4">© 2026 Distill. All rights reserved.</p>
+      <p className="text-xs text-gray-300 mt-4">© 2026 A.B. Digital Apps. All rights reserved.</p>
     </footer>
   )
 }
