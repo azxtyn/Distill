@@ -15,7 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Distill",
   description: "Turn any video, article, or PDF into a 1-minute summary",
-};
+  icons: {
+    icon: "/favicon.svg",
+  },
+}
+
 
 export default function RootLayout({ children }) {
   return (
