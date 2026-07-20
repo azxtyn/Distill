@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
-import { YoutubeTranscript } from 'youtube-transcript'
+import { YoutubeTranscript } from 'youtube-transcript-plus'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const FREE_DAILY_LIMIT = 5
