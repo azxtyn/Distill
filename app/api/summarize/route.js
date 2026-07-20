@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
+import { YoutubeTranscript } from 'youtube-transcript'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const FREE_DAILY_LIMIT = 5
@@ -32,7 +33,6 @@ export async function POST(req) {
     if (fetchError && fetchError.code !== 'PGRST116') {
       console.log('SUPABASE FETCH ERROR:', fetchError)
     }
-    console.log('Existing usage row:', existing, 'isPro:', isPro)
 
     const currentCount = existing?.count || 0
 
@@ -51,7 +51,18 @@ export async function POST(req) {
 
     let userContent = []
 
-    if (content.type === 'pdf' && content.value) {
+    if (content.type === 'youtube') {
+      try {
+        const transcript = await YoutubeTranscript.fetchTranscript(content.value)
+        const transcriptText = transcript.map(t => t.text).join(' ')
+        const prompt = `Here is the transcript of a YouTube video:\n\n${transcriptText}\n\nRespond ONLY with valid JSON with keys:\n1. "summary": 2-4 sentence overview.\n2. "takeaways": array of 4-6 key insight strings.\n3. "actions": array of 3-5 concrete action item strings.${quizNote}`
+        userContent = prompt
+      } catch (e) {
+        return Response.json({
+          error: 'Could not fetch transcript for this YouTube video. Make sure the video has captions enabled, or paste the transcript text directly into the Text tab.'
+        }, { status: 400 })
+      }
+    } else if (content.type === 'pdf' && content.value) {
       userContent = [
         { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: content.value } },
         { type: 'text', text: buildPrompt(content, quizNote) }
@@ -100,7 +111,6 @@ function buildPrompt(content, quizNote) {
   let block = ''
   if (content.type === 'text') block = `Content to analyze:\n\n${content.value}`
   else if (content.type === 'url') block = `Analyze this article URL and summarize what this page is likely about based on the URL: ${content.value}`
-  else if (content.type === 'youtube') block = `A user has shared this YouTube URL: ${content.value}. Based on the URL and any information you can infer about this video, provide a helpful summary. If you cannot determine the content, summarize what the channel or topic is likely about and provide general takeaways.`
   else block = 'Analyze the attached PDF document.'
 
   return `${block}\n\nRespond ONLY with valid JSON with keys:\n1. "summary": 2-4 sentence overview.\n2. "takeaways": array of 4-6 key insight strings.\n3. "actions": array of 3-5 concrete action item strings.${quizNote}`
