@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser, SignUpButton } from '@clerk/nextjs'
 
 export default function App() {
   const [tab, setTab] = useState('text')
@@ -14,6 +15,17 @@ export default function App() {
   const [results, setResults] = useState(null)
   const [activeResult, setActiveResult] = useState('summary')
   const [remaining, setRemaining] = useState(null)
+  const [isPro, setIsPro] = useState(false)
+  const { isSignedIn } = useUser()
+
+  useEffect(() => {
+    if (isSignedIn) {
+      fetch('/api/subscription-status')
+        .then(res => res.json())
+        .then(data => setIsPro(data.isPro))
+        .catch(() => setIsPro(false))
+    }
+  }, [isSignedIn])
 
   const handleFile = (file) => {
     if (!file) return
@@ -53,7 +65,7 @@ export default function App() {
       const res = await fetch('/api/summarize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, includeQuiz })
+        body: JSON.stringify({ content, includeQuiz: isPro ? includeQuiz : false })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
@@ -137,10 +149,24 @@ export default function App() {
         )}
 
         <div className="flex items-center justify-between mt-4">
-          <label className="flex items-center gap-2 text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
-            <input type="checkbox" checked={includeQuiz} onChange={e => setIncludeQuiz(e.target.checked)} className="accent-cyan-400" />
-            Include quiz
-          </label>
+          <div>
+            {isPro ? (
+              <label className="flex items-center gap-2 text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
+                <input type="checkbox" checked={includeQuiz} onChange={e => setIncludeQuiz(e.target.checked)} className="accent-cyan-400" />
+                Include quiz
+              </label>
+            ) : (
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm text-white/20 cursor-not-allowed">
+                  <input type="checkbox" disabled className="accent-cyan-400 opacity-30" />
+                  Include quiz
+                </label>
+                <a href="#pricing" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
+                  ✦ Pro only
+                </a>
+              </div>
+            )}
+          </div>
           <button onClick={handleSubmit} disabled={loading}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
             {loading ? 'Analyzing…' : 'Summarize →'}
