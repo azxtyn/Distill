@@ -13,10 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Distill",
-  description: "Turn any video, article, or PDF into a 1-minute summary",
+  title: "Distill — AI Content Summarizer",
+  description: "Turn any article, YouTube video, or PDF into a 1-minute summary, key takeaways, and action items in seconds. Try Distill free.",
   icons: {
     icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "Distill — AI Content Summarizer",
+    description: "Turn any article, YouTube video, or PDF into a 1-minute summary, key takeaways, and action items in seconds.",
+    url: "https://getdistillapp.com",
+    siteName: "Distill",
   },
 }
 
