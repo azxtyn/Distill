@@ -121,9 +121,12 @@ export default function App() {
             className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-cyan-400/50 transition-colors" />
         )}
         {tab === 'youtube' && (
-          <input value={ytUrl} onChange={e => setYtUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
-            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-cyan-400/50 transition-colors" />
+          <div>
+            <input value={ytUrl} onChange={e => setYtUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/20 focus:outline-none focus:border-cyan-400/50 transition-colors" />
+            <p className="text-xs text-white/30 mt-2">💡 Tip: If this doesn't work, click the <strong className="text-white/50">⋯ button</strong> under any YouTube video → <strong className="text-white/50">Show transcript</strong> → copy and paste it into the Text tab for best results.</p>
+          </div>
         )}
         {tab === 'pdf' && (
           <div onClick={() => document.getElementById('pdf-input').click()}
