@@ -22,7 +22,7 @@ export default function Footer() {
           <div className="flex gap-6">
             <button onClick={() => setModal('privacy')} className="text-sm text-white/30 hover:text-white transition-colors">Privacy</button>
             <button onClick={() => setModal('terms')} className="text-sm text-white/30 hover:text-white transition-colors">Terms</button>
-            <a href="mailto:a.b.digitalappsdev@gmail.com" className="text-sm text-white/30 hover:text-white transition-colors">Contact</a>
+            <button onClick={() => setModal('contact')} className="text-sm text-white/30 hover:text-white transition-colors">Contact</button>
           </div>
         </div>
         <p className="text-xs text-white/20 mt-4">© 2026 A.B. Digital Apps. All rights reserved.</p>
@@ -34,7 +34,9 @@ export default function Footer() {
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
           <div className="relative bg-[#111111] border border-white/10 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-medium text-white">{modal === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}</h2>
+              <h2 className="text-xl font-medium text-white">
+                {modal === 'privacy' ? 'Privacy Policy' : modal === 'terms' ? 'Terms of Service' : 'Contact Us'}
+              </h2>
               <button onClick={() => setModal(null)} className="text-white/40 hover:text-white transition-colors text-xl">✕</button>
             </div>
 
@@ -86,6 +88,18 @@ export default function Footer() {
                 <p>These Terms are governed by the laws of the State of Maryland, United States.</p></div>
                 <div><h3 className="text-white font-medium mb-2">6. Contact Us</h3>
                 <p>A.B. Digital Apps — a.b.digitalappsdev@gmail.com — getdistillapp.com</p></div>
+              </div>
+            )}
+
+            {modal === 'contact' && (
+              <div className="text-white/60 text-sm leading-relaxed space-y-4">
+                <p>Have a question, feedback, or issue? We'd love to hear from you!</p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <p className="text-white font-medium mb-1">A.B. Digital Apps</p>
+                  <p>Email: <a href="mailto:a.b.digitalappsdev@gmail.com" className="text-cyan-400 hover:text-cyan-300 transition-colors">a.b.digitalappsdev@gmail.com</a></p>
+                  <p className="mt-1">Website: getdistillapp.com</p>
+                </div>
+                <p className="text-white/40 text-xs">We typically respond within 24-48 hours.</p>
               </div>
             )}
 
