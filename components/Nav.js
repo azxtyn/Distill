@@ -21,6 +21,7 @@ export default function Nav() {
         <a href="#how" className="text-sm text-white/50 hover:text-white transition-colors">How it works</a>
         <a href="#features" className="text-sm text-white/50 hover:text-white transition-colors">Features</a>
         <a href="#pricing" className="text-sm text-white/50 hover:text-white transition-colors">Pricing</a>
+<a href="/essay" className="text-sm text-white/50 hover:text-white transition-colors">Essay Writer</a>
 
         {!isSignedIn && (
           <>
