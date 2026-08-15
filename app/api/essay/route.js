@@ -46,8 +46,8 @@ export async function POST(req) {
       )
     }
 
-    const { topic, type, wordCount } = await req.json()
-    const essay = await generateEssay(topic, type, wordCount)
+    const { topic, docType, style, citation, wordCount } = await req.json()
+    const essay = await generateEssay(topic, docType, style, citation, wordCount)
 
     if (existing) {
       await supabase
@@ -69,40 +69,33 @@ export async function POST(req) {
   }
 }
 
-async function generateEssay(topic, type, customWordCount) {
+async function generateEssay(topic, docType, style, citation, customWordCount) {
   const wordCount = customWordCount || 500
 
-  const essayTypeInstructions = {
-    argumentative: 'Write an argumentative essay that takes a clear position and supports it with evidence and reasoning.',
-    persuasive: 'Write a persuasive essay that convinces the reader to agree with a specific viewpoint using emotional appeals and strong arguments.',
-    expository: 'Write an expository essay that explains and informs the reader about the topic in a clear and objective way.',
-    narrative: 'Write a narrative essay that tells a story related to the topic with a clear beginning, middle, and end.',
-    compare: 'Write a compare and contrast essay that analyzes the similarities and differences related to the topic.',
-    analytical: 'Write an analytical essay that breaks down the topic into its components and examines each one carefully.',
-    descriptive: 'Write a descriptive essay that paints a vivid picture of the topic using sensory details and imagery.',
-    critical: 'Write a critical analysis essay that evaluates the topic by examining its strengths, weaknesses, and implications.',
-    reflective: 'Write a reflective essay that thoughtfully explores personal insights and lessons related to the topic.',
-    research: 'Write a research essay that presents evidence-based arguments supported by facts and credible sources.',
-    cause_effect: 'Write a cause and effect essay that examines the reasons something happened and its resulting consequences.',
-    definition: 'Write a definition essay that thoroughly explains and explores the meaning and significance of the topic.',
-  }
+  const citationNote = citation && citation !== 'None'
+    ? `\n- Follow ${citation} citation format conventions throughout`
+    : ''
 
-  const prompt = `${essayTypeInstructions[type] || essayTypeInstructions.argumentative}
+  const prompt = `Write a ${docType} about the following topic using a ${style} writing style.
 
 Topic: ${topic}
 
 Requirements:
 - Approximately ${wordCount} words
-- Include an introduction, body paragraphs, and conclusion
-- Use clear, academic language appropriate for high school or college level
+- Document type: ${docType}
+- Writing style: ${style}${citationNote}
+- Include appropriate structure for a ${docType} (introduction, body, conclusion or equivalent)
+- Use clear language appropriate for high school or college level
 - Make it well-structured and engaging
 
-Write the essay now:`
+${citation && citation !== 'None' ? `Citation format note: Follow ${citation} formatting conventions. Include properly formatted in-text citations and a works cited/references section at the end using placeholder sources that demonstrate correct ${citation} format.` : ''}
+
+Write the ${docType} now:`
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 4000,
-    system: 'You are an expert essay writer. Write well-structured, engaging essays appropriate for academic use. Write the essay directly without any preamble or meta-commentary.',
+    system: `You are an expert academic writer specializing in all types of documents and writing styles. Write the requested document directly without any preamble or meta-commentary. Follow the specified writing style and citation format precisely.`,
     messages: [{ role: 'user', content: prompt }]
   })
 
