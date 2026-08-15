@@ -98,7 +98,7 @@ export default function Pricing() {
           <p className="text-xs text-white/30 mb-6 h-4">{annual ? 'Billed as $76.70/year' : ' '}</p>
           <ul className="space-y-3 mb-8 text-sm">
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 50 Distills per day</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Unlimited Essays</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 10 AI Essays per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Quiz generation</li>
