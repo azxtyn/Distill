@@ -20,11 +20,6 @@ export default function Hero() {
           <a href="#app" className="btn-primary glow">Try Distill free</a>
           <a href="#how" className="btn-secondary">See how it works</a>
         </div>
-        <div className="flex gap-8 justify-center mt-12 flex-wrap">
-          <span className="text-sm text-white/30">✓ 12,000+ learners</span>
-          <span className="text-sm text-white/30">✓ 200k+ summaries created</span>
-          <span className="text-sm text-white/30">✓ Avg. 18 min saved per use</span>
-        </div>
       </div>
     </section>
   )
