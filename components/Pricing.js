@@ -69,10 +69,10 @@ export default function Pricing() {
           <p className="text-xs text-white/20 mb-6 h-4"> </p>
           <ul className="space-y-3 mb-8 text-sm">
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 5 Distills per day</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 3 Essays per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Quiz generation</li>
+            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> AI Essay Writer</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Priority processing</li>
           </ul>
           {!isSignedIn ? (
