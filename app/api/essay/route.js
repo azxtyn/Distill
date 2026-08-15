@@ -46,8 +46,8 @@ export async function POST(req) {
       )
     }
 
-    const { topic, type, length } = await req.json()
-    const essay = await generateEssay(topic, type, length)
+    const { topic, type, wordCount } = await req.json()
+    const essay = await generateEssay(topic, type, wordCount)
 
     if (existing) {
       await supabase
@@ -69,8 +69,8 @@ export async function POST(req) {
   }
 }
 
-async function generateEssay(topic, type, length) {
-  const wordCount = length === 'short' ? 250 : length === 'long' ? 1000 : 500
+async function generateEssay(topic, type, customWordCount) {
+  const wordCount = customWordCount || 500
 
   const essayTypeInstructions = {
     argumentative: 'Write an argumentative essay that takes a clear position and supports it with evidence and reasoning.',
@@ -79,6 +79,12 @@ async function generateEssay(topic, type, length) {
     narrative: 'Write a narrative essay that tells a story related to the topic with a clear beginning, middle, and end.',
     compare: 'Write a compare and contrast essay that analyzes the similarities and differences related to the topic.',
     analytical: 'Write an analytical essay that breaks down the topic into its components and examines each one carefully.',
+    descriptive: 'Write a descriptive essay that paints a vivid picture of the topic using sensory details and imagery.',
+    critical: 'Write a critical analysis essay that evaluates the topic by examining its strengths, weaknesses, and implications.',
+    reflective: 'Write a reflective essay that thoughtfully explores personal insights and lessons related to the topic.',
+    research: 'Write a research essay that presents evidence-based arguments supported by facts and credible sources.',
+    cause_effect: 'Write a cause and effect essay that examines the reasons something happened and its resulting consequences.',
+    definition: 'Write a definition essay that thoroughly explains and explores the meaning and significance of the topic.',
   }
 
   const prompt = `${essayTypeInstructions[type] || essayTypeInstructions.argumentative}
@@ -95,7 +101,7 @@ Write the essay now:`
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
+    max_tokens: 4000,
     system: 'You are an expert essay writer. Write well-structured, engaging essays appropriate for academic use. Write the essay directly without any preamble or meta-commentary.',
     messages: [{ role: 'user', content: prompt }]
   })

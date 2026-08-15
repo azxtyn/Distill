@@ -1,13 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
-import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 
 export default function EssayWriter() {
   const [topic, setTopic] = useState('')
   const [type, setType] = useState('argumentative')
-  const [length, setLength] = useState('medium')
+  const [wordCount, setWordCount] = useState(500)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [essay, setEssay] = useState('')
@@ -17,6 +16,7 @@ export default function EssayWriter() {
   const handleGenerate = async () => {
     if (!topic.trim()) { setError('Please enter a topic first.'); return }
     if (!isSignedIn) { setError('Please sign in to use the essay writer.'); return }
+    if (wordCount < 100 || wordCount > 3000) { setError('Word count must be between 100 and 3000.'); return }
     setLoading(true)
     setError('')
     setEssay('')
@@ -24,7 +24,7 @@ export default function EssayWriter() {
       const res = await fetch('/api/essay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic, type, length })
+        body: JSON.stringify({ topic, type, wordCount })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
@@ -41,6 +41,13 @@ export default function EssayWriter() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const handleWordCountChange = (e) => {
+    const val = parseInt(e.target.value)
+    if (isNaN(val)) { setWordCount(''); return }
+    if (val > 3000) { setWordCount(3000); return }
+    setWordCount(val)
+  }
+
   const essayTypes = [
     { id: 'argumentative', label: 'Argumentative' },
     { id: 'persuasive', label: 'Persuasive' },
@@ -54,14 +61,6 @@ export default function EssayWriter() {
     { id: 'research', label: 'Research' },
     { id: 'cause_effect', label: 'Cause & Effect' },
     { id: 'definition', label: 'Definition' },
-  ]
-
-  const lengths = [
-    { id: 'short', label: 'Short (250 words)' },
-    { id: 'medium', label: 'Medium (500 words)' },
-    { id: 'long', label: 'Long (1000 words)' },
-    { id: 'extended', label: 'Extended (1500 words)' },
-    { id: 'comprehensive', label: 'Comprehensive (2000 words)' },
   ]
 
   return (
@@ -88,7 +87,7 @@ export default function EssayWriter() {
         <div className="text-center mb-10">
           <p className="text-xs font-medium tracking-widest text-cyan-400 uppercase mb-2">AI Essay Writer</p>
           <h1 className="text-4xl font-medium text-white mb-4">Write any essay in seconds</h1>
-          <p className="text-white/40 max-w-md mx-auto">Enter your topic, pick your essay type and length, and let AI do the writing.</p>
+          <p className="text-white/40 max-w-md mx-auto">Enter your topic, pick your essay type and word count, and let AI do the writing.</p>
         </div>
 
         <div className="max-w-2xl mx-auto space-y-6">
@@ -117,17 +116,25 @@ export default function EssayWriter() {
           </div>
 
           <div className="card p-6">
-            <label className="block text-sm text-white/60 mb-3">Essay length</label>
-            <div className="flex gap-2 flex-wrap">
-              {lengths.map(l => (
-                <button key={l.id} onClick={() => setLength(l.id)}
-                  className={`px-4 py-2 rounded-lg text-sm border transition-all ${length === l.id
-                    ? 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400'
-                    : 'border-white/10 text-white/40 hover:text-white hover:border-white/20'}`}>
-                  {l.label}
-                </button>
-              ))}
+            <label className="block text-sm text-white/60 mb-2">Word count <span className="text-white/30">(100 — 3000)</span></label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="100"
+                max="3000"
+                value={wordCount}
+                onChange={handleWordCountChange}
+                className="w-32 bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-cyan-400/50 transition-colors"
+              />
+              <span className="text-white/30 text-sm">words</span>
+              <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-400 rounded-full transition-all"
+                  style={{ width: `${Math.min(((wordCount - 100) / 2900) * 100, 100)}%` }}
+                ></div>
+              </div>
             </div>
+            <p className="text-xs text-white/20 mt-2">Maximum 3000 words per essay</p>
           </div>
 
           {error && <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-3">{error}</p>}
