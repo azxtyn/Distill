@@ -5,6 +5,7 @@ import { YoutubeTranscript } from 'youtube-transcript-plus'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const FREE_DAILY_LIMIT = 5
+const PRO_DAILY_LIMIT = 50
 
 export async function POST(req) {
   try {
@@ -20,6 +21,7 @@ export async function POST(req) {
       .single()
 
     const isPro = subscription?.status === 'active'
+    const dailyLimit = isPro ? PRO_DAILY_LIMIT : FREE_DAILY_LIMIT
 
     const today = new Date().toISOString().split('T')[0]
 
@@ -36,9 +38,12 @@ export async function POST(req) {
 
     const currentCount = existing?.count || 0
 
-    if (!isPro && currentCount >= FREE_DAILY_LIMIT) {
+    if (currentCount >= dailyLimit) {
       return Response.json(
-        { error: `You've used all ${FREE_DAILY_LIMIT} free Distills today. Upgrade to Pro for unlimited access.` },
+        { error: isPro
+            ? `You've used all ${PRO_DAILY_LIMIT} Distills for today. Your limit resets tomorrow.`
+            : `You've used all ${FREE_DAILY_LIMIT} free Distills today. Upgrade to Pro for 50 Distills per day.`
+        },
         { status: 429 }
       )
     }
@@ -92,7 +97,7 @@ export async function POST(req) {
     } else {
       const { error } = await supabase
         .from('usage')
-        .insert({ user_id: userId, used_date: today, count: 1 })
+        .insert({ user_id: userId, used_date: today, count: 1, essay_count: 0 })
       updateError = error
     }
 
@@ -100,7 +105,7 @@ export async function POST(req) {
       console.log('SUPABASE UPDATE/INSERT ERROR:', updateError)
     }
 
-    return Response.json({ ...parsed, remaining: isPro ? null : FREE_DAILY_LIMIT - (currentCount + 1) })
+    return Response.json({ ...parsed, remaining: dailyLimit - (currentCount + 1) })
   } catch (e) {
     console.log('ROUTE CATCH ERROR:', e)
     return Response.json({ error: e.message }, { status: 500 })
