@@ -11,6 +11,7 @@ export default function EssayWriter() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [essay, setEssay] = useState('')
+  const [copied, setCopied] = useState(false)
   const { isSignedIn } = useUser()
 
   const handleGenerate = async () => {
@@ -36,6 +37,8 @@ export default function EssayWriter() {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(essay)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const essayTypes = [
@@ -45,17 +48,42 @@ export default function EssayWriter() {
     { id: 'narrative', label: 'Narrative' },
     { id: 'compare', label: 'Compare & Contrast' },
     { id: 'analytical', label: 'Analytical' },
+    { id: 'descriptive', label: 'Descriptive' },
+    { id: 'critical', label: 'Critical Analysis' },
+    { id: 'reflective', label: 'Reflective' },
+    { id: 'research', label: 'Research' },
+    { id: 'cause_effect', label: 'Cause & Effect' },
+    { id: 'definition', label: 'Definition' },
   ]
 
   const lengths = [
     { id: 'short', label: 'Short (250 words)' },
     { id: 'medium', label: 'Medium (500 words)' },
     { id: 'long', label: 'Long (1000 words)' },
+    { id: 'extended', label: 'Extended (1500 words)' },
+    { id: 'comprehensive', label: 'Comprehensive (2000 words)' },
   ]
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Nav />
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 z-50 backdrop-blur-md bg-black/60">
+        <a href="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-[#111827] flex items-center justify-center">
+            <svg viewBox="0 0 32 32" width="18" height="18">
+              <rect x="4" y="6" width="18" height="3" rx="1.5" fill="#06B6D4"/>
+              <rect x="4" y="12" width="13" height="3" rx="1.5" fill="#06B6D4" opacity="0.75"/>
+              <rect x="4" y="18" width="8" height="3" rx="1.5" fill="#06B6D4" opacity="0.5"/>
+              <rect x="4" y="24" width="5" height="3" rx="1.5" fill="#06B6D4" opacity="0.25"/>
+            </svg>
+          </div>
+          <span className="font-medium text-white">distill</span>
+        </a>
+        <div className="flex items-center gap-6">
+          <a href="/" className="text-sm text-white/50 hover:text-white transition-colors">Home</a>
+          <a href="/#pricing" className="text-sm text-white/50 hover:text-white transition-colors">Pricing</a>
+        </div>
+      </nav>
+
       <main className="flex-1 px-6 py-20">
         <div className="text-center mb-10">
           <p className="text-xs font-medium tracking-widest text-cyan-400 uppercase mb-2">AI Essay Writer</p>
@@ -113,11 +141,20 @@ export default function EssayWriter() {
             <div className="card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-white font-medium">Your essay</h2>
-                <button onClick={handleCopy} className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors border border-cyan-400/20 px-3 py-1 rounded-lg">
-                  Copy →
+                <button onClick={handleCopy}
+                  className={`text-sm transition-colors border px-3 py-1 rounded-lg ${copied
+                    ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
+                    : 'text-cyan-400 hover:text-cyan-300 border-cyan-400/20'}`}>
+                  {copied ? '✓ Copied!' : 'Copy →'}
                 </button>
               </div>
               <div className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{essay}</div>
+              <button onClick={handleCopy}
+                className={`mt-4 w-full text-sm transition-colors border px-3 py-2 rounded-lg ${copied
+                  ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
+                  : 'text-white/40 hover:text-white border-white/10 hover:border-white/20'}`}>
+                {copied ? '✓ Copied to clipboard!' : 'Copy essay to clipboard'}
+              </button>
             </div>
           )}
         </div>
