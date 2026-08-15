@@ -69,11 +69,11 @@ export default function Pricing() {
           <p className="text-xs text-white/20 mb-6 h-4"> </p>
           <ul className="space-y-3 mb-8 text-sm">
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 5 Distills per day</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 3 Essays per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Quiz generation</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Priority processing</li>
-            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> History & saved summaries</li>
           </ul>
           {!isSignedIn ? (
             <SignUpButton mode="modal">
@@ -92,17 +92,17 @@ export default function Pricing() {
           </div>
           <p className="text-sm text-white/40 font-medium mb-4 mt-2">Pro</p>
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-4xl font-medium text-white">{annual ? '$3.99' : '$4.99'}</span>
+            <span className="text-4xl font-medium text-white">{annual ? '$6.39' : '$7.99'}</span>
             <span className="text-white/40 text-sm">/month</span>
           </div>
-          <p className="text-xs text-white/30 mb-6 h-4">{annual ? 'Billed as $47.90/year' : ' '}</p>
+          <p className="text-xs text-white/30 mb-6 h-4">{annual ? 'Billed as $76.70/year' : ' '}</p>
           <ul className="space-y-3 mb-8 text-sm">
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Unlimited Distills</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 50 Distills per day</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Unlimited Essays</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Quiz generation</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Priority processing</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> History & saved summaries</li>
           </ul>
           {!isSignedIn ? (
             <SignUpButton mode="modal">
