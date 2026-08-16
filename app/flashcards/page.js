@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 export default function Flashcards() {
   const [decks, setDecks] = useState([])
   const [activeDeck, setActiveDeck] = useState(null)
-  const [view, setView] = useState('home') // home, study, create, ai
+  const [view, setView] = useState('home')
   const [deckName, setDeckName] = useState('')
   const [cards, setCards] = useState([{ question: '', answer: '' }])
   const [currentCard, setCurrentCard] = useState(0)
@@ -27,7 +27,7 @@ export default function Flashcards() {
         .then(data => {
           setIsPro(data.isPro)
           setCheckingPro(false)
-          if (data.isPro) loadDecks()
+          loadDecks()
         })
         .catch(() => setCheckingPro(false))
     } else {
@@ -63,7 +63,7 @@ export default function Flashcards() {
     const validCards = cards.filter(c => c.question.trim() && c.answer.trim())
     if (validCards.length === 0) { setError('Please add at least one complete card.'); return }
 
-    if (!isPro) {
+    if (!isSignedIn) {
       setActiveDeck({ name: deckName, cards: validCards })
       setView('study')
       setCurrentCard(0)
@@ -150,7 +150,6 @@ export default function Flashcards() {
       <main className="flex-1 px-6 py-16">
         <div className="max-w-3xl mx-auto">
 
-          {/* Home view */}
           {view === 'home' && (
             <>
               <div className="text-center mb-10">
@@ -176,7 +175,6 @@ export default function Flashcards() {
                       </div>
                       <h3 className="text-white font-medium mb-1">Create manually</h3>
                       <p className="text-white/40 text-sm">Write your own questions and answers. Free for everyone.</p>
-                      {!isPro && <p className="text-yellow-400/60 text-xs mt-2">⚡ Cards won't be saved — upgrade to Pro to save decks</p>}
                     </button>
 
                     <button onClick={() => { if (isPro) { setView('ai'); setError('') } }}
@@ -190,7 +188,7 @@ export default function Flashcards() {
                     </button>
                   </div>
 
-                  {isPro && decks.length > 0 && (
+                  {decks.length > 0 && (
                     <div>
                       <h2 className="text-white font-medium mb-4">Your decks</h2>
                       <div className="space-y-3">
@@ -212,7 +210,7 @@ export default function Flashcards() {
                     </div>
                   )}
 
-                  {isPro && decks.length === 0 && (
+                  {decks.length === 0 && (
                     <div className="card p-8 text-center">
                       <p className="text-white/40">No saved decks yet. Create your first one above!</p>
                     </div>
@@ -222,19 +220,12 @@ export default function Flashcards() {
             </>
           )}
 
-          {/* Create view */}
           {view === 'create' && (
             <>
               <div className="flex items-center gap-4 mb-8">
                 <button onClick={() => setView('home')} className="text-white/40 hover:text-white transition-colors">← Back</button>
                 <h2 className="text-2xl font-medium text-white">Create flashcard deck</h2>
               </div>
-
-              {!isPro && (
-                <div className="border border-yellow-400/20 bg-yellow-400/5 rounded-xl p-4 mb-6">
-                  <p className="text-yellow-400/80 text-sm">⚡ You're on the free plan — your cards won't be saved after you leave. <a href="/#pricing" className="text-cyan-400 hover:text-cyan-300">Upgrade to Pro</a> to save your decks.</p>
-                </div>
-              )}
 
               {error && <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-3 mb-4">{error}</p>}
 
@@ -276,13 +267,12 @@ export default function Flashcards() {
                 <button onClick={addCard} className="btn-secondary flex-1">+ Add card</button>
                 <button onClick={saveDeck} disabled={saving}
                   className="btn-primary flex-1 disabled:opacity-40">
-                  {saving ? 'Saving...' : isPro ? 'Save deck →' : 'Study now →'}
+                  {saving ? 'Saving...' : 'Save deck →'}
                 </button>
               </div>
             </>
           )}
 
-          {/* AI Generate view */}
           {view === 'ai' && (
             <>
               <div className="flex items-center gap-4 mb-8">
@@ -320,7 +310,6 @@ export default function Flashcards() {
             </>
           )}
 
-          {/* Study view */}
           {view === 'study' && activeDeck && (
             <>
               <div className="flex items-center gap-4 mb-8">
