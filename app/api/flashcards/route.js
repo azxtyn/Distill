@@ -29,16 +29,6 @@ export async function POST(req) {
       return Response.json({ error: 'Please sign in.' }, { status: 401 })
     }
 
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('status')
-      .eq('user_id', userId)
-      .single()
-
-    if (subscription?.status !== 'active') {
-      return Response.json({ error: 'Saving decks is a Pro feature.' }, { status: 403 })
-    }
-
     const { deckName, cards } = await req.json()
 
     const { data, error } = await supabase
