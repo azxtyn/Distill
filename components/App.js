@@ -9,6 +9,8 @@ export default function App() {
   const [ytUrl, setYtUrl] = useState('')
   const [pdfBase64, setPdfBase64] = useState(null)
   const [pdfName, setPdfName] = useState('')
+  const [notes, setNotes] = useState('')
+  const [notesFormat, setNotesFormat] = useState('topics')
   const [includeQuiz, setIncludeQuiz] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -42,6 +44,7 @@ export default function App() {
     if (tab === 'url') return { type: 'url', value: url }
     if (tab === 'youtube') return { type: 'youtube', value: ytUrl }
     if (tab === 'pdf') return { type: 'pdf', value: pdfBase64 }
+    if (tab === 'notes') return { type: 'notes', value: notes, format: notesFormat }
   }
 
   const handleClear = () => {
@@ -50,6 +53,7 @@ export default function App() {
     setYtUrl('')
     setPdfBase64(null)
     setPdfName('')
+    setNotes('')
     setIncludeQuiz(false)
     setError('')
     setResults(null)
@@ -70,7 +74,7 @@ export default function App() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setResults(data)
-      setActiveResult('summary')
+      setActiveResult(tab === 'notes' ? 'notes' : 'summary')
       if (typeof data.remaining === 'number') setRemaining(data.remaining)
     } catch (e) {
       setError(e.message)
@@ -83,16 +87,27 @@ export default function App() {
     { id: 'url', label: 'URL' },
     { id: 'youtube', label: 'YouTube' },
     { id: 'pdf', label: 'PDF' },
+    { id: 'notes', label: '📝 Notes' },
+  ]
+
+  const notesFormats = [
+    { id: 'topics', label: 'By topic' },
+    { id: 'chronological', label: 'Chronological' },
+    { id: 'concepts', label: 'Key concepts' },
+    { id: 'studyguide', label: 'Study guide' },
+    { id: 'outline', label: 'Outline' },
   ]
 
   const resultTabs = [
-    { id: 'summary', label: 'Summary' },
-    { id: 'takeaways', label: 'Key takeaways' },
-    { id: 'actions', label: 'Action items' },
+    ...(tab === 'notes' ? [{ id: 'notes', label: 'Organized notes' }] : [
+      { id: 'summary', label: 'Summary' },
+      { id: 'takeaways', label: 'Key takeaways' },
+      { id: 'actions', label: 'Action items' },
+    ]),
     ...(results?.quiz ? [{ id: 'quiz', label: 'Quiz' }] : []),
   ]
 
-  const hasContent = text || url || ytUrl || pdfBase64
+  const hasContent = text || url || ytUrl || pdfBase64 || notes
 
   return (
     <section id="app" className="px-6 py-20">
@@ -147,29 +162,47 @@ export default function App() {
             <input id="pdf-input" type="file" accept="application/pdf" className="hidden" onChange={e => handleFile(e.target.files[0])} />
           </div>
         )}
+        {tab === 'notes' && (
+          <div>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)}
+              placeholder="Paste your class notes here — messy, unformatted, bullet points, anything. Distill will organize them for you…"
+              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/20 min-h-40 resize-y focus:outline-none focus:border-cyan-400/50 transition-colors mb-3" />
+            <p className="text-xs text-white/40 mb-2">How would you like your notes organized?</p>
+            <div className="flex gap-2 flex-wrap">
+              {notesFormats.map(f => (
+                <button key={f.id} onClick={() => setNotesFormat(f.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${notesFormat === f.id
+                    ? 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400'
+                    : 'border-white/10 text-white/40 hover:text-white hover:border-white/20'}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between mt-4">
           <div>
-            {isPro ? (
-              <label className="flex items-center gap-2 text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
-                <input type="checkbox" checked={includeQuiz} onChange={e => setIncludeQuiz(e.target.checked)} className="accent-cyan-400" />
-                Include quiz
-              </label>
-            ) : (
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-sm text-white/20 cursor-not-allowed">
-                  <input type="checkbox" disabled className="accent-cyan-400 opacity-30" />
+            {tab !== 'notes' && (
+              isPro ? (
+                <label className="flex items-center gap-2 text-sm text-white/40 cursor-pointer hover:text-white/60 transition-colors">
+                  <input type="checkbox" checked={includeQuiz} onChange={e => setIncludeQuiz(e.target.checked)} className="accent-cyan-400" />
                   Include quiz
                 </label>
-                <a href="#pricing" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">
-                  ✦ Pro only
-                </a>
-              </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm text-white/20 cursor-not-allowed">
+                    <input type="checkbox" disabled className="accent-cyan-400 opacity-30" />
+                    Include quiz
+                  </label>
+                  <a href="#pricing" className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">✦ Pro only</a>
+                </div>
+              )
             )}
           </div>
           <button onClick={handleSubmit} disabled={loading}
             className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-            {loading ? 'Analyzing…' : 'Summarize →'}
+            {loading ? 'Analyzing…' : tab === 'notes' ? 'Organize notes →' : 'Summarize →'}
           </button>
         </div>
 
@@ -200,6 +233,9 @@ export default function App() {
                 <ul className="list-disc pl-4 space-y-1">
                   {results.actions?.map((a, i) => <li key={i}>{a}</li>)}
                 </ul>
+              )}
+              {activeResult === 'notes' && (
+                <div className="whitespace-pre-wrap">{results.organizedNotes}</div>
               )}
               {activeResult === 'quiz' && results.quiz?.map((q, qi) => (
                 <QuizItem key={qi} question={q} index={qi} />

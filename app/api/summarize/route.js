@@ -50,6 +50,54 @@ export async function POST(req) {
 
     const { content, includeQuiz } = await req.json()
 
+    // Handle notes tab separately
+    if (content.type === 'notes') {
+      const formatInstructions = {
+        topics: 'Organize the notes by topic. Create clear topic headings and group related information under each heading.',
+        chronological: 'Organize the notes in chronological order. Use timestamps or sequential headings to show the flow of information.',
+        concepts: 'Extract and organize the key concepts. For each concept, provide a clear definition and any related details.',
+        studyguide: 'Create a comprehensive study guide. Include key terms, important facts, main concepts, and potential exam questions at the end.',
+        outline: 'Create a structured outline with main points (I, II, III) and sub-points (A, B, C) organizing all the information hierarchically.',
+      }
+
+      const format = content.format || 'topics'
+      const prompt = `You are a note-taking assistant. A student has given you their raw class notes. ${formatInstructions[format]}
+
+Here are the raw notes:
+
+${content.value}
+
+Organize these notes clearly and professionally. Use markdown-style formatting with headers (##) and bullet points. Make it easy to study from.`
+
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2000,
+        system: 'You are an expert note organizer. Take raw messy class notes and organize them into clean, structured, easy-to-study notes. Never add information that wasn\'t in the original notes.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+
+      const organizedNotes = response.content.map(b => b.text || '').join('')
+
+      let updateError = null
+      if (existing) {
+        const { error } = await supabase
+          .from('usage')
+          .update({ count: currentCount + 1 })
+          .eq('user_id', userId)
+          .eq('used_date', today)
+        updateError = error
+      } else {
+        const { error } = await supabase
+          .from('usage')
+          .insert({ user_id: userId, used_date: today, count: 1, essay_count: 0 })
+        updateError = error
+      }
+
+      if (updateError) console.log('SUPABASE UPDATE ERROR:', updateError)
+
+      return Response.json({ organizedNotes, remaining: isPro ? null : FREE_DAILY_LIMIT - (currentCount + 1) })
+    }
+
     const quizNote = includeQuiz
       ? '\n6. "quiz": array of 3 objects each with "question" string, "options" array of 4 strings, "answer" integer 0-3.'
       : ''
@@ -105,7 +153,7 @@ export async function POST(req) {
       console.log('SUPABASE UPDATE/INSERT ERROR:', updateError)
     }
 
-    return Response.json({ ...parsed, remaining: dailyLimit - (currentCount + 1) })
+    return Response.json({ ...parsed, remaining: isPro ? null : FREE_DAILY_LIMIT - (currentCount + 1) })
   } catch (e) {
     console.log('ROUTE CATCH ERROR:', e)
     return Response.json({ error: e.message }, { status: 500 })
