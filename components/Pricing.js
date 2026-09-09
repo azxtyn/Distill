@@ -73,7 +73,6 @@ export default function Pricing() {
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 5 Distills per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 3 Citations per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Manual flashcards (saved)</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Notes organizer</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> AI Essay Writer</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Quiz generation</li>
@@ -108,7 +107,6 @@ export default function Pricing() {
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 10 AI Flashcard sets per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Quiz generation</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Notes organizer</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Priority processing</li>
           </ul>
           {!isSignedIn ? (
