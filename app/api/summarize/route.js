@@ -5,7 +5,7 @@ import { YoutubeTranscript } from 'youtube-transcript-plus'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const FREE_DAILY_LIMIT = 5
-const PRO_DAILY_LIMIT = 50
+const PRO_DAILY_LIMIT = 25
 
 export async function POST(req) {
   try {

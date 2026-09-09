@@ -56,10 +56,12 @@ export default function Pricing() {
           <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${annual ? 'left-5' : 'left-0.5'}`}></div>
         </button>
         <span className={`text-sm ${annual ? 'text-white font-medium' : 'text-white/40'}`}>Annual</span>
-        {annual && <span className="text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1">Save 20%</span>}
+        {annual && <span className="text-xs font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 rounded-full px-3 py-1">Save ~36%</span>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        
+        {/* Free tier */}
         <div className="card p-6">
           <p className="text-sm text-white/40 font-medium mb-4">Free</p>
           <div className="flex items-baseline gap-1 mb-1">
@@ -69,11 +71,13 @@ export default function Pricing() {
           <p className="text-xs text-white/20 mb-6 h-4"> </p>
           <ul className="space-y-3 mb-8 text-sm">
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 5 Distills per day</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 3 Citations per day</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Manual flashcards (saved)</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
-            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Quiz generation</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Notes organizer</li>
             <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> AI Essay Writer</li>
-            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Priority processing</li>
+            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> Quiz generation</li>
+            <li className="flex items-center gap-2 text-white/20"><span className="text-white/20">✗</span> AI Flashcard generation</li>
           </ul>
           {!isSignedIn ? (
             <SignUpButton mode="modal">
@@ -86,22 +90,25 @@ export default function Pricing() {
           )}
         </div>
 
+        {/* Pro tier */}
         <div className="card p-6 border-cyan-400/30 relative">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-black text-xs font-medium px-4 py-1 rounded-full">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-black text-xs font-medium px-4 py-1 rounded-full whitespace-nowrap">
             Most popular
           </div>
           <p className="text-sm text-white/40 font-medium mb-4 mt-2">Pro</p>
           <div className="flex items-baseline gap-1 mb-1">
-            <span className="text-4xl font-medium text-white">{annual ? '$6.39' : '$7.99'}</span>
+            <span className="text-4xl font-medium text-white">{annual ? '$8.25' : '$12.99'}</span>
             <span className="text-white/40 text-sm">/month</span>
           </div>
-          <p className="text-xs text-white/30 mb-6 h-4">{annual ? 'Billed as $76.70/year' : ' '}</p>
+          <p className="text-xs text-white/30 mb-6 h-4">{annual ? 'Billed as $99/year' : ' '}</p>
           <ul className="space-y-3 mb-8 text-sm">
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 50 Distills per day</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 25 Distills per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 10 AI Essays per day</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
-            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Summary, takeaways & actions</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Unlimited citations</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> 10 AI Flashcard sets per day</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Quiz generation</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Notes organizer</li>
+            <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Text, URL, YouTube & PDF</li>
             <li className="flex items-center gap-2 text-white/70"><span className="text-cyan-400">✓</span> Priority processing</li>
           </ul>
           {!isSignedIn ? (
@@ -119,7 +126,16 @@ export default function Pricing() {
           )}
         </div>
       </div>
+
+      {/* Stripe security note */}
       <p className="text-center text-xs text-white/20 mt-8">🔒 Secure checkout powered by Stripe — cancel anytime</p>
+
+      {/* The joke */}
+      <div className="max-w-2xl mx-auto mt-6 border border-white/5 rounded-xl p-4 bg-white/5 text-center">
+        <p className="text-white/30 text-xs leading-relaxed">
+          💸 <span className="text-white/50 font-medium">Why does Pro cost money?</span> Honest answer — AI isn't cheap. Every summary, essay, and flashcard set costs us real money in API fees. We're not a big corporation with unlimited funding — just a small team that genuinely wants to help students learn faster without going broke in the process. We priced Pro as fairly as we could while keeping the lights on. Thanks for understanding. 🙏
+        </p>
+      </div>
     </section>
   )
 }
