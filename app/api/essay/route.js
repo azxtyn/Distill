@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const PRO_ESSAY_LIMIT = 10
+const PRO_EDIT_LIMIT = 5
 
 export async function POST(req) {
   try {
@@ -37,6 +38,34 @@ export async function POST(req) {
       console.log('SUPABASE FETCH ERROR:', fetchError)
     }
 
+    const body = await req.json()
+
+    // Handle AI edit requests separately
+    if (body.type === 'edit') {
+      const editCount = existing?.essay_edit_count || 0
+
+      if (editCount >= PRO_EDIT_LIMIT) {
+        return Response.json(
+          { error: `You've used all ${PRO_EDIT_LIMIT} AI edits for today. Your limit resets tomorrow.` },
+          { status: 429 }
+        )
+      }
+
+      const { essay, instruction } = body
+      const edited = await editEssay(essay, instruction)
+
+      if (existing) {
+        await supabase
+          .from('usage')
+          .update({ essay_edit_count: editCount + 1 })
+          .eq('user_id', userId)
+          .eq('used_date', today)
+      }
+
+      return Response.json({ essay: edited, editsRemaining: PRO_EDIT_LIMIT - (editCount + 1) })
+    }
+
+    // Handle new essay generation
     const essayCount = existing?.essay_count || 0
 
     if (essayCount >= PRO_ESSAY_LIMIT) {
@@ -46,7 +75,7 @@ export async function POST(req) {
       )
     }
 
-    const { topic, docType, style, citation, wordCount } = await req.json()
+    const { topic, docType, style, citation, wordCount } = body
     const essay = await generateEssay(topic, docType, style, citation, wordCount)
 
     if (existing) {
@@ -58,7 +87,7 @@ export async function POST(req) {
     } else {
       await supabase
         .from('usage')
-        .insert({ user_id: userId, used_date: today, count: 0, essay_count: 1 })
+        .insert({ user_id: userId, used_date: today, count: 0, essay_count: 1, essay_edit_count: 0 })
     }
 
     return Response.json({ essay, remaining: PRO_ESSAY_LIMIT - (essayCount + 1) })
@@ -76,28 +105,73 @@ async function generateEssay(topic, docType, style, citation, customWordCount) {
     ? `\n- Follow ${citation} citation format conventions throughout`
     : ''
 
+  const mlaHeader = citation === 'MLA 9' || citation === 'MLA'
+    ? `Start with the MLA header exactly like this (on separate lines):
+[Your Name]
+[Teacher's Name]
+[Class Name]
+[Due Date]
+
+Then the centered title on the next line, then begin the essay body.`
+    : citation === 'APA 7' || citation === 'APA'
+    ? `Start with an APA title page formatted like this:
+[Title of Essay]
+[Your Name]
+[Institution Name]
+[Course Name and Number]
+[Instructor's Name]
+[Due Date]
+
+Then begin the essay on the next page with the title centered.`
+    : ''
+
   const prompt = `Write a ${docType} about the following topic using a ${style} writing style.
 
 Topic: ${topic}
 
+CRITICAL FORMATTING RULES — follow these exactly:
+- Do NOT use any markdown formatting whatsoever
+- Do NOT use ## or # headers
+- Do NOT use --- dividers
+- Do NOT use bold (**text**) or italic (*text*) markdown
+- Write in plain text only, exactly like a real typed essay
+- Section breaks should just be new paragraphs, not headers
+- The conclusion should just be a paragraph starting naturally, not labeled "Conclusion"
+- Body paragraphs should flow naturally without labels
+
+${mlaHeader}
+
 Requirements:
-- Approximately ${wordCount} words
+- Approximately ${wordCount} words (not counting header)
 - Document type: ${docType}
 - Writing style: ${style}${citationNote}
-- Include appropriate structure for a ${docType} (introduction, body, conclusion or equivalent)
-- Use clear language appropriate for high school or college level
-- Make it well-structured and engaging
+- Write like a real student — natural transitions, varied sentence length
+- No markdown symbols of any kind
 
-${citation && citation !== 'None' ? `Citation format note: Follow ${citation} formatting conventions. Include properly formatted in-text citations and a works cited/references section at the end using placeholder sources that demonstrate correct ${citation} format.` : ''}
+${citation && citation !== 'None' ? `Citation format: Follow ${citation} formatting conventions. Include properly formatted in-text citations naturally within the text. Add a Works Cited or References page at the very end using placeholder sources in correct ${citation} format.` : ''}
 
-Write the ${docType} now:`
+Write the ${docType} now in plain text:`
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
     max_tokens: 4000,
-    system: `You are an expert academic writer specializing in all types of documents and writing styles. Write the requested document directly without any preamble or meta-commentary. Follow the specified writing style and citation format precisely.`,
+    system: `You are an expert academic writer. Write essays exactly as a real student would type them — plain text, no markdown formatting, no ## headers, no --- dividers, no bold or italic symbols. Write naturally flowing prose with proper paragraph breaks. Never use any markdown syntax.`,
     messages: [{ role: 'user', content: prompt }]
   })
 
   return response.content.map(b => b.text || '').join('')
+}
+
+async function editEssay(essay, instruction) {
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 4000,
+    system: `You are an expert essay editor. Make only the specific changes requested by the user. Keep everything else exactly the same. Never add markdown formatting. Return only the edited essay text with no explanation.`,
+    messages: [{
+      role: 'user',
+      content: `Here is the essay:\n\n${essay}\n\nPlease make this specific change: ${instruction}\n\nReturn the full edited essay with only that change made.`
+    }]
+  })
+
+  return response.content.map(b => b.text || '').join('').trim()
 }

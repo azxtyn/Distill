@@ -76,7 +76,8 @@ const writingStyles = {
 }
 
 const citationFormats = [
-  'None', 'MLA 9', 'APA 7', 'Chicago', 'Turabian', 'IEEE', 'Harvard', 'AMA', 'ACS', 'ASA', 'Vancouver'
+  'None', 'MLA 9', 'APA 7', 'Chicago', 'Turabian', 'Harvard',
+  'IEEE', 'AMA', 'ACS', 'Vancouver'
 ]
 
 export default function EssayWriter() {
@@ -87,13 +88,16 @@ export default function EssayWriter() {
   const [wordCount, setWordCount] = useState(500)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [error, setError] = useState('')
   const [essay, setEssay] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedEssay, setEditedEssay] = useState('')
+  const [aiEditInstruction, setAiEditInstruction] = useState('')
+  const [showAiEdit, setShowAiEdit] = useState(false)
+  const [editsRemaining, setEditsRemaining] = useState(5)
   const [copied, setCopied] = useState(false)
   const { isSignedIn } = useUser()
-
-  const allDocTypes = useMemo(() => Object.values(documentTypes).flat(), [])
-  const allStyles = useMemo(() => Object.values(writingStyles).flat(), [])
 
   const filteredDocTypes = useMemo(() => {
     if (!search) return documentTypes
@@ -124,6 +128,9 @@ export default function EssayWriter() {
     setLoading(true)
     setError('')
     setEssay('')
+    setEditedEssay('')
+    setIsEditing(false)
+    setShowAiEdit(false)
     try {
       const res = await fetch('/api/essay', {
         method: 'POST',
@@ -133,14 +140,38 @@ export default function EssayWriter() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Something went wrong')
       setEssay(data.essay)
+      setEditedEssay(data.essay)
     } catch (e) {
       setError(e.message)
     }
     setLoading(false)
   }
 
+  const handleAiEdit = async () => {
+    if (!aiEditInstruction.trim()) { setError('Please enter what changes you want.'); return }
+    if (editsRemaining <= 0) { setError('No AI edits remaining today.'); return }
+    setEditing(true)
+    setError('')
+    try {
+      const res = await fetch('/api/essay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'edit', essay: editedEssay, instruction: aiEditInstruction })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Something went wrong')
+      setEditedEssay(data.essay)
+      setEditsRemaining(data.editsRemaining)
+      setAiEditInstruction('')
+      setShowAiEdit(false)
+    } catch (e) {
+      setError(e.message)
+    }
+    setEditing(false)
+  }
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(essay)
+    navigator.clipboard.writeText(editedEssay || essay)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -259,7 +290,7 @@ export default function EssayWriter() {
           {/* Citation Format */}
           <div className="card p-6">
             <label className="block text-sm text-white/60 mb-1">Citation format</label>
-            <p className="text-xs text-white/20 mb-4">Select one — the essay will follow that format's conventions</p>
+            <p className="text-xs text-white/20 mb-4">Selecting MLA 9 or APA 7 will also format the essay header correctly</p>
             <div className="flex flex-wrap gap-2">
               {citationFormats.map(fmt => (
                 <button key={fmt} onClick={() => setCitation(fmt)}
@@ -311,16 +342,56 @@ export default function EssayWriter() {
 
           {essay && (
             <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                 <h2 className="text-white font-medium">Your essay</h2>
-                <button onClick={handleCopy}
-                  className={`text-sm transition-colors border px-3 py-1 rounded-lg ${copied
-                    ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
-                    : 'text-cyan-400 hover:text-cyan-300 border-cyan-400/20'}`}>
-                  {copied ? '✓ Copied!' : 'Copy →'}
-                </button>
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={() => setIsEditing(!isEditing)}
+                    className={`text-sm transition-colors border px-3 py-1 rounded-lg ${isEditing
+                      ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
+                      : 'text-white/40 hover:text-white border-white/10 hover:border-white/20'}`}>
+                    {isEditing ? '✓ Done editing' : '✏️ Edit manually'}
+                  </button>
+                  <button onClick={() => setShowAiEdit(!showAiEdit)}
+                    className={`text-sm transition-colors border px-3 py-1 rounded-lg ${showAiEdit
+                      ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
+                      : 'text-white/40 hover:text-white border-white/10 hover:border-white/20'}`}>
+                    ✨ AI edit ({editsRemaining} left)
+                  </button>
+                  <button onClick={handleCopy}
+                    className={`text-sm transition-colors border px-3 py-1 rounded-lg ${copied
+                      ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
+                      : 'text-cyan-400 hover:text-cyan-300 border-cyan-400/20'}`}>
+                    {copied ? '✓ Copied!' : 'Copy →'}
+                  </button>
+                </div>
               </div>
-              <div className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{essay}</div>
+
+              {showAiEdit && (
+                <div className="mb-4 bg-white/5 border border-white/10 rounded-lg p-4">
+                  <p className="text-xs text-white/40 mb-2">Tell AI what to change — be specific. ({editsRemaining} edits remaining today)</p>
+                  <textarea
+                    value={aiEditInstruction}
+                    onChange={e => setAiEditInstruction(e.target.value)}
+                    placeholder="e.g. Make the introduction more engaging, Add more evidence to paragraph 2, Make the tone less formal..."
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/20 min-h-16 resize-y focus:outline-none focus:border-cyan-400/50 transition-colors mb-2"
+                  />
+                  <button onClick={handleAiEdit} disabled={editing}
+                    className="btn-primary text-sm px-4 py-2 disabled:opacity-40">
+                    {editing ? 'Editing…' : 'Apply changes →'}
+                  </button>
+                </div>
+              )}
+
+              {isEditing ? (
+                <textarea
+                  value={editedEssay}
+                  onChange={e => setEditedEssay(e.target.value)}
+                  className="w-full bg-white/5 border border-cyan-400/30 rounded-lg p-4 text-sm text-white min-h-96 resize-y focus:outline-none transition-colors leading-relaxed font-mono"
+                />
+              ) : (
+                <div className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">{editedEssay}</div>
+              )}
+
               <button onClick={handleCopy}
                 className={`mt-4 w-full text-sm transition-colors border px-3 py-2 rounded-lg ${copied
                   ? 'text-cyan-400 border-cyan-400/40 bg-cyan-400/10'
